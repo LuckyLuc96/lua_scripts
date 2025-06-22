@@ -1,6 +1,7 @@
-local baseSpeed = 7.0               --Modifiable in world.conf 7.0 == 1.0 base speed, 1.1 base speed == 7.7
+local baseSpeed = 7.7               --Modifiable in world.conf 7.0 == 1.0 base speed, 1.1 base speed == 7.7
 local toggleShapeshiftSpeeds = true --Toggle increase of travelform/ghostwolf to approx 100% move speed
 local trainMountLevelTen = true
+local fasterDeadToggle = true
 local CHECK_INTERVAL = 2000         --Checks every 2 seconds
 -- Movement types
 local MOVE_RUN = 1
@@ -12,6 +13,7 @@ local function UpdateSpeed(eventId, delay, repeats, player)
     local playerMounted = player:IsMounted()
     local currentSpeed = math.floor(player:GetSpeed(MOVE_RUN))
     local currentFlying = math.floor(player:GetSpeed(MOVE_FLY))
+    local playerDead = player:IsDead()
 
     local ground1 = baseSpeed * 1.6
     local newground1 = 2.2
@@ -42,6 +44,13 @@ local function UpdateSpeed(eventId, delay, repeats, player)
     elseif currentFlying == math.floor(flying3) or currentFlying == math.floor(flyingOdd) then
         player:SetSpeed(MOVE_FLY, newflying3)
     end
+    
+    if fasterDeadToggle then
+       if playerDead then
+           player:SetSpeed(MOVE_RUN, newground1)
+           player:SetSpeed(MOVE_FLY, newflying1)
+       end
+   end
 end
 
 local function travelFormCheck(eventId, delay, repeats, player)
@@ -109,17 +118,20 @@ local function OnLevelChange(event, player, oldLevel)
 end
 
 local function OnMapChange(event, player)
-    player:SendBroadcastMessage("Mount Speed Script loaded!")
     player:RegisterEvent(UpdateSpeed, CHECK_INTERVAL, 0)
     player:RegisterEvent(travelFormCheck, CHECK_INTERVAL, 0)
     player:RegisterEvent(trainMountCheck, 1)
+end
+
+local function OnLogin(event, player)
+    player:SendBroadcastMessage("Mount Speed Script loaded!")
 end
 
 local function OnLogout(event, player)
     player:RemoveEvents()
 end
 
---RegisterPlayerEvent(3, OnLogin)
+RegisterPlayerEvent(3, OnLogin)
 RegisterPlayerEvent(4, OnLogout)
 RegisterPlayerEvent(13, OnLevelChange)
 RegisterPlayerEvent(28, OnMapChange)
