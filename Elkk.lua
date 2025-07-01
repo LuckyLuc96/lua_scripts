@@ -1,3 +1,4 @@
+-- Replace the Great Green Elkk mount with the magic rooster
 local rooster = 66122
 local elkk = 35712
 
