@@ -46,6 +46,7 @@ function MountSpeedModifier:CheckAura(unit)
 end
 
 function MountSpeedModifier:UpdateSpeed(eventId, delay, repeats, player)
+    if not player then return end
     local guid = player:GetGUID()
     self.playerSpeeds[guid] = player:GetSpeed(self.MOVE_RUN)
     self:CheckAura(player)
@@ -94,6 +95,7 @@ function MountSpeedModifier:UpdateSpeed(eventId, delay, repeats, player)
 end
 
 function MountSpeedModifier:travelFormCheck(eventId, delay, repeats, player)
+    if not player or self.toggleShapeshiftSpeeds then return end
     if self.toggleShapeshiftSpeeds then
         local travelForm = player:HasAura(self.TRAVEL_FORM_SPELL_ID)
         local ghostWolf = player:HasAura(self.GHOST_WOLF_SPELL_ID)
@@ -115,6 +117,7 @@ function MountSpeedModifier:travelFormCheck(eventId, delay, repeats, player)
 end
 
 function MountSpeedModifier:trainMountCheck(eventId, delay, repeats, player)
+    if not player or self.trainMountLevelTen then return end
     if self.trainMountLevelTen then             --Check race by racial ability
         local human = player:HasSpell(58985)    --Racial: Perception
         local dwarf = player:HasSpell(2481)     --Find Treasure
@@ -164,14 +167,18 @@ function MountSpeedModifier:OnMapChange(event, player)
 end
 
 function MountSpeedModifier:OnLogin(event, player)
+    if not player then return end
     player:SendBroadcastMessage("Mount Speed Script loaded!")
+    self:OnMapChange(event, player)
 end
 
-local function OnLogout(event, player)
-    player:RemoveEvents()
+function MountSpeedModifier:OnLogout(event, player)
+    if player then
+        player:RemoveEvents()
+    end
 end
 
-RegisterPlayerEvent(3, function(...) MountSpeedModifier.OnLogin(...) end)
-RegisterPlayerEvent(4, function(...) MountSpeedModifier.OnLogout(...) end)
-RegisterPlayerEvent(13, function(...) MountSpeedModifier.OnLevelChange(...) end)
-RegisterPlayerEvent(28, function(...) MountSpeedModifier.OnMapChange(...) end)
+RegisterPlayerEvent(3, function(...) MountSpeedModifier:OnLogin(...) end)
+RegisterPlayerEvent(4, function(...) MountSpeedModifier:OnLogout(...) end)
+RegisterPlayerEvent(13, function(...) MountSpeedModifier:OnLevelChange(...) end)
+RegisterPlayerEvent(28, function(...) MountSpeedModifier:OnMapChange(...) end)
