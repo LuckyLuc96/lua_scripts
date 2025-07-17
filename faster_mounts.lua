@@ -2,8 +2,8 @@ local MountSpeedModifier = {
     --Modifiable in world.conf 7.0 == 1.0 base speed. 7.7 is ABNORMAL and means world.conf setting is 1.1x player speed.
     baseSpeed = 7.0,
     toggleShapeshiftSpeeds = true,
-    trainMountLevelTen = true,
-    fasterDeadToggle = true,
+    toggleMountLevelTen = true,
+    toggleFasterDead = true,
     CHECK_INTERVAL = 2000,
 
     MOVE_RUN = 1,
@@ -52,7 +52,6 @@ function MountSpeedModifier:UpdateSpeed(eventId, delay, repeats, player)
     self:CheckAura(player)
 
     local playerMounted = player:IsMounted()
-    local currentFlying = player:GetSpeed(self.MOVE_FLY)
     local playerDead = player:IsDead()
 
     self.currentSpeed = player:GetSpeed(self.MOVE_RUN)
@@ -86,7 +85,7 @@ function MountSpeedModifier:UpdateSpeed(eventId, delay, repeats, player)
         player:SetSpeed(self.MOVE_FLY, newflying3)
     end
 
-    if self.fasterDeadToggle then
+    if self.toggleFasterDead then
         if playerDead then
             player:SetSpeed(self.MOVE_RUN, newground1)
             player:SetSpeed(self.MOVE_FLY, newflying1)
@@ -116,54 +115,37 @@ function MountSpeedModifier:travelFormCheck(eventId, delay, repeats, player)
     end
 end
 
-function MountSpeedModifier:trainMountCheck(eventId, delay, repeats, player)
-    if not player or self.trainMountLevelTen then return end
-    if self.trainMountLevelTen then             --Check race by racial ability
-        local human = player:HasSpell(58985)    --Racial: Perception
-        local dwarf = player:HasSpell(2481)     --Find Treasure
-        local nightElf = player:HasSpell(20582) --Quickness
-        local gnome = player:HasSpell(20591)    --Expansive Mind
-        local draenei = player:HasSpell(28875)  --Gem Cutting
-        local orc = player:HasSpell(20573)      --Hardiness
-        local undead = player:HasSpell(20577)   --Cannibalize
-        local tauren = player:HasSpell(20552)   --Cultivation
-        local troll = player:HasSpell(26297)    --Beserking
-        local bloodElf = player:HasSpell(28877) --Arcane Affinity
-        local levelTen = player:HasAchieved(6)  --Achievement ID - Level 10
-        if human and levelTen then
-            player:LearnSpell(6648)             --Chestnut Mare
-        elseif dwarf and levelTen then
-            player:LearnSpell(6899)             --Brown Ram
-        elseif nightElf and levelTen then
-            player:LearnSpell(8394)             --Striped Frostsaber
-        elseif gnome and levelTen then
-            player:LearnSpell(17453)            --Green Mechanostrider
-        elseif draenei and levelTen then
-            player:LearnSpell(34406)            -- Brown Elkk
-        elseif orc and levelTen then
-            player:LearnSpell(6654)             --Brown Wolf
-        elseif undead and levelTen then
-            player:LearnSpell(17464)            --Brown Skeletal Horse
-        elseif tauren and levelTen then
-            player:LearnSpell(18990)            --Brown Kodo
-        elseif troll and levelTen then
-            player:LearnSpell(10799)            --Violet Raptor
-        elseif bloodElf and levelTen then
-            player:LearnSpell(35018)            --Purple Hawkstrider
+function MountSpeedModifier:OnLevelChange(event, player)
+    if self.toggleMountLevelTen then
+        local race = player:GetRace()          -- See https://wowpedia.fandom.com/wiki/RaceId
+        local levelTen = player:HasAchieved(6) --Achievement ID - Level 10
+        if race == 1 and levelTen then
+            player:LearnSpell(6648)            --Chestnut Mare
+        elseif race == 2 and levelTen then
+            player:LearnSpell(6654)            --Brown Wolf
+        elseif race == 3 and levelTen then
+            player:LearnSpell(6899)            --Brown Ram
+        elseif race == 4 and levelTen then
+            player:LearnSpell(8394)            --Striped Frostsaber
+        elseif race == 5 and levelTen then
+            player:LearnSpell(17464)           --Brown Skeletal Horse
+        elseif race == 6 and levelTen then
+            player:LearnSpell(18990)           --Brown Kodo
+        elseif race == 7 and levelTen then
+            player:LearnSpell(17453)           --Green Mechanostrider
+        elseif race == 8 and levelTen then
+            player:LearnSpell(10799)           --Violet Raptor
+        elseif race == 10 and levelTen then
+            player:LearnSpell(35018)           --Purple Hawkstrider
+        elseif race == 11 and levelTen then
+            player:LearnSpell(34406)           --Brown Elkk
         end
-    end
-end
-
-function MountSpeedModifier:OnLevelChange(event, player, oldLevel)
-    if player:GetLevel() > oldLevel then -- Only check if level increased
-        player:RegisterEvent(self.trainMountCheck, 10)
     end
 end
 
 function MountSpeedModifier:OnMapChange(event, player)
     player:RegisterEvent(self.UpdateSpeed, self.CHECK_INTERVAL, 0)
     player:RegisterEvent(self.travelFormCheck, self.CHECK_INTERVAL, 0)
-    player:RegisterEvent(self.trainMountCheck, 1)
 end
 
 function MountSpeedModifier:OnLogin(event, player)
