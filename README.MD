@@ -21,7 +21,8 @@ This is the most prominent script in the collection. It adjusts mount and travel
 
 Inside the script:
 - `baseSpeed`: Sets the baseline run speed (7.0 is normal).
-Set any of the below to 0 to disable the feature.
+
+- *Any of the below can be disabled at the top of the file by setting the variable to false (lowercase).*
 - `toggleShapeshiftSpeeds`: Enables special speed for shapeshift forms.
 - `toggleMountLevelTen`: Automatically teaches racial mount at level 10.
 - `toggleFasterDead`: Increases movement speed while dead.
