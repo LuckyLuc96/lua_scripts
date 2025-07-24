@@ -33,6 +33,14 @@ Inside the script:
 ## Digital Gathering
 
 This script is a work in progress and will allow users to mine ore and gather herbs from a distance and remain mounted.
+This still needs work and will probably require a way to tell eluna to use/deplete the gathering node and simulate the loot you would get by giving it to the player. Through testing I don't think it's possible to target a game object with a spell via eluna at this time.
+
+
+---
+
+## Faster Crafting
+
+Still early in development. The goal is to allow for faster crafting while in safe areas, and I believe that to do this I'll simply give a haste effect to players while in a safe zone. This could have side effects, such as giving a bonus power to defenders if their city is under attack. 
 
 
 
