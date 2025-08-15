@@ -27,6 +27,11 @@ Inside the script:
 - `toggleMountLevelTen`: Automatically teaches racial mount at level 10.
 - `toggleFasterDead`: Increases movement speed while dead.
 
+---
+
+## Auto Guild
+
+This is a simple script that will add a newly created player into the guild when they first log in. This is server wide and is intended for servers that have a starter or default guild.
 
 ---
 
@@ -40,7 +45,7 @@ This still needs work and will probably require a way to tell eluna to use/deple
 
 ## Faster Crafting
 
-Still early in development. The goal is to allow for faster crafting while in safe areas, and I believe that to do this I'll simply give a haste effect to players while in a safe zone. This could have side effects, such as giving a bonus power to defenders if their city is under attack. 
+Still early in development. The goal is to allow for faster crafting while in safe areas, and I believe that to do this I'll simply give a haste effect to players while in a safe zone. This could have side effects, such as giving a bonus power to defenders if their city is under attack.
 
 
 
