@@ -1,6 +1,6 @@
 local BLACK_MARKET_NPC_ID = 101111 -- Replace with your NPC's ID
 local ARAXIA_TOKEN_ID = 910001     -- ID Tokens or Currency
-local SET_COST = 100               -- Cost of each armor set in Araxia Tokens
+local SET_COST = 100               -- Cost of each armor set in Tokens
 
 local CLASS_NAMES_AND_ICONS = {
     [1]  = { name = "Warrior", icon = "Interface\\Icons\\Ability_Warrior_DefensiveStance" },
