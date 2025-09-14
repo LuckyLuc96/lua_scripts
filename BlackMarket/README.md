@@ -1,7 +1,10 @@
 # Black-Market-Vendor
 **Updated 2025 by Judgefae - This version's SQL only works for Trinity Core**
+
 **Credit to original author to the Azerothcore Version Manmadedrummer**
+
 https://github.com/Manmadedrummer/Weekly-Armor-Vendor-Black-Market-
+
 Adds a Vendor who sells One Armor Set per class and rotates them out weekly.
 
 The SQL table's (`black_market_armor_sets` `black_market_current_set`) is created in your "World" folder. The Lua script for the NPC handles randomly getting the Armor sets and allows players to purchase them for 100 Araxia Tokens (Item ID: 910001).

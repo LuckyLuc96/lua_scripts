@@ -2,6 +2,8 @@
 
 This repository contains various Lua scripts written for use with [Eluna](https://elunaluaengine.github.io/), the Lua engine extension for various server cores. These scripts are designed to enhance gameplay, add automation, or modify default behavior in a World of Warcraft emulator environment.
 
+The majority of the scripts are tested for and work on Azerothcore. The Blackmarket script works only on TrinityCore.
+
 ## Faster Mounts
 
 This is the most prominent script in the collection. It adjusts mount and travel form speeds greatly.
@@ -31,7 +33,11 @@ Inside the script:
 
 ## Auto Guild
 
-This is a simple script that will add a newly created player into the guild when they first log in. This is server wide and is intended for servers that have a starter or default guild.
+This is a simple script that will add a newly created player into the guild when they first log in. This is server wide and is intended for servers that have a starter or default guild. Currently only supports adding players to one single guild, not faction specifc guilds.
+
+### Configuration
+
+Change the name of the default guild in the script from "fishy" to the name of your guild. Spaces and capitalization are important.
 
 ---
 
@@ -45,7 +51,7 @@ This still needs work and will probably require a way to tell eluna to use/deple
 
 ## Faster Crafting
 
-Still early in development. The goal is to allow for faster crafting while in safe areas, and I believe that to do this I'll simply give a haste effect to players while in a safe zone. This could have side effects, such as giving a bonus power to defenders if their city is under attack.
+This script will apply an aura every time the player enters a city of their faction. However, there is no aura to increase crafting speed. Another way to increase crafting speed needs to be considered. Perhaps a new spell being created or a way to tell the game to detect the start of this cast and return instant completion.
 
 
 

@@ -1,5 +1,5 @@
 -- Update this variable GuildName to be the name of your starter guild. This is case sensitive!
-GuildName = "test"
+GuildName = "Fishy"
 Rank = 0
 
 local function ON_FIRST_LOGIN(event, player)
