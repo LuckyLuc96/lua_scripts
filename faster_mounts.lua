@@ -56,7 +56,8 @@ function MountSpeedModifier:UpdateSpeed(eventId, delay, repeats, player)
 
     self.currentSpeed = player:GetSpeed(self.MOVE_RUN)
     self.CheckAura(player)
-
+    player:SendBroadcastMessage(string.format("DEBUG -- Your speed is currently: Ground: %d, Flying: %d ",
+        self.currentSpeed))
     local ground1 = self.baseSpeed * 1.6
     local newground1 = 2.2
 
@@ -73,15 +74,15 @@ function MountSpeedModifier:UpdateSpeed(eventId, delay, repeats, player)
     local flyingRare = self.baseSpeed * 4.0 -- Some rare few mounts increase speed to 300% instead of 310%
     local newflying3 = 5
 
-    if self.CHECK_INTERVAL == math.floor(ground1) and playerMounted then
+    if self.currentSpeed == math.floor(ground1) and playerMounted then
         player:SetSpeed(self.MOVE_RUN, newground1)
-    elseif self.CHECK_INTERVAL == math.floor(ground2) and playerMounted then
+    elseif self.currentSpeed == math.floor(ground2) and playerMounted then
         player:SetSpeed(self.MOVE_RUN, newground2)
-    elseif self.CHECK_INTERVAL == math.floor(flying1) then
+    elseif self.currentSpeed == math.floor(flying1) then
         player:SetSpeed(self.MOVE_FLY, newflying1)
-    elseif self.CHECK_INTERVAL == math.floor(flying2) then
+    elseif self.currentSpeed == math.floor(flying2) then
         player:SetSpeed(self.MOVE_FLY, newflying2)
-    elseif self.CHECK_INTERVAL == math.floor(flying3) or self.CHECK_INTERVAL == math.floor(flyingRare) then
+    elseif self.currentSpeed == math.floor(flying3) or self.currentSpeed == math.floor(flyingRare) then
         player:SetSpeed(self.MOVE_FLY, newflying3)
     end
 
@@ -102,8 +103,8 @@ function MountSpeedModifier:travelFormCheck(eventId, delay, repeats, player)
             player:SetSpeed(self.MOVE_RUN, 2) --increase or decrease 2nd value to change speed to your desire.
         end
         -- automatically learn relevant travel form for druids and shamans
-        local druidPlayer = player:HasSpell(5176) -- Lighting Bolt
-        local shamanPlayer = player:HasSpell(403) -- Wrath
+        local druidPlayer = player:HasSpell(5176) -- Wrath Spell
+        local shamanPlayer = player:HasSpell(403) -- Lighting Bolt Spell
         if druidPlayer and not player:HasSpell(self.TRAVEL_FORM_SPELL_ID) then
             player:LearnSpell(self.TRAVEL_FORM_SPELL_ID)
             player:SendNotification("You have automatically learned Travel Form!")
@@ -143,15 +144,12 @@ function MountSpeedModifier:OnLevelChange(event, player)
     end
 end
 
-function MountSpeedModifier:OnMapChange(event, player)
-    player:RegisterEvent(self.UpdateSpeed, self.CHECK_INTERVAL, 0)
-    player:RegisterEvent(self.travelFormCheck, self.CHECK_INTERVAL, 0)
-end
-
 function MountSpeedModifier:OnLogin(event, player)
+    player:SendBroadcastMessage(string.format("Test Message"))
     if not player then return end
     player:SendBroadcastMessage("Mount Speed Script loaded!")
-    self:OnMapChange(event, player)
+    player:RegisterEvent(self.UpdateSpeed, self.CHECK_INTERVAL, 0)
+    player:RegisterEvent(self.travelFormCheck, self.CHECK_INTERVAL, 0)
 end
 
 function MountSpeedModifier:OnLogout(event, player)
@@ -160,7 +158,6 @@ function MountSpeedModifier:OnLogout(event, player)
     end
 end
 
-RegisterPlayerEvent(3, function(...) MountSpeedModifier:OnLogin(...) end)
-RegisterPlayerEvent(4, function(...) MountSpeedModifier:OnLogout(...) end)
-RegisterPlayerEvent(13, function(...) MountSpeedModifier:OnLevelChange(...) end)
-RegisterPlayerEvent(28, function(...) MountSpeedModifier:OnMapChange(...) end)
+RegisterPlayerEvent(3, MountSpeedModifier:OnLogin(event, player))
+RegisterPlayerEvent(4, MountSpeedModifier:OnLogout(event, player))
+RegisterPlayerEvent(13, MountSpeedModifier:OnLevelChange(event, player, oldLevel))
