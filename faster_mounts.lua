@@ -1,123 +1,114 @@
-local MountSpeedModifier = {
-    --Modifiable in world.conf 7.0 == 1.0 base speed. 7.7 is ABNORMAL and means world.conf setting is 1.1x player speed.
-    baseSpeed = 7.0,
-    toggleShapeshiftSpeeds = true,
-    toggleMountLevelTen = true,
-    toggleFasterDead = true,
-    CHECK_INTERVAL = 2000,
+local PLAYER_EVENT_ON_LOGIN = 3
+local PLAYER_EVENT_ON_LOGOUT = 4
+local PLAYER_EVENT_ON_LEVEL_CHANGE = 13
 
-    MOVE_RUN = 1,
-    MOVE_FLY = 6,
-    TRAVEL_FORM_SPELL_ID = 783,
-    GHOST_WOLF_SPELL_ID = 2645,
-    CRUSADER_AURA_ID = 32223,
-    PURSUIT_JUSTICE_1 = 26022,  -- 8% increase mounted pally talent
-    PURSUIT_JUSTICE_2 = 26023,  -- 15%
-    DK_CRUSADER_AURA_1 = 49146, -- 10% increased mounted dk talent
-    DK_CRUSADER_AURA_2 = 51267, -- 20%
-}
 
-function MountSpeedModifier:new(object)
-    object = object or {}
-    setmetatable(object, self)
-    self.__index = self
-    object.playerSpeeds = {}
-    return object
-end
+--Modifiable in world.conf 7.0 == 1.0 base speed. 7.7 is ABNORMAL and means world.conf setting is 1.1x player speed.
+baseSpeed = 7.7
+toggleShapeshiftSpeeds = true
+toggleMountLevelTen = true
+toggleFasterDead = true
+CHECK_INTERVAL = 2000
+MOVE_RUN = 1
+MOVE_FLY = 6
+TRAVEL_FORM_SPELL_ID = 783
+GHOST_WOLF_SPELL_ID = 2645
+CRUSADER_AURA_ID = 32223
+PURSUIT_JUSTICE_1 = 26022  -- 8% increase mounted pally talent
+PURSUIT_JUSTICE_2 = 26023  -- 15%
+DK_CRUSADER_AURA_1 = 49146 -- 10% increased mounted dk talent
+DK_CRUSADER_AURA_2 = 51267 -- 20%
 
-function MountSpeedModifier:CheckAura(unit)
-    local hasCrusader = unit:HasAura(self.CRUSADER_AURA_ID)
-    local pursuitJustice1 = unit:HasAura(self.PURSUIT_JUSTICE_1)
-    local pursuitJustice2 = unit:HasAura(self.PURSUIT_JUSTICE_2)
-    local paleHorse1 = unit:HasAura(self.DK_CRUSADER_AURA_1)
-    local paleHorse2 = unit:HasAura(self.DK_CRUSADER_AURA_2)
+function CheckAura(unit)
+    local hasCrusader = unit:HasAura(CRUSADER_AURA_ID)
+    local pursuitJustice1 = unit:HasAura(PURSUIT_JUSTICE_1)
+    local pursuitJustice2 = unit:HasAura(PURSUIT_JUSTICE_2)
+    local paleHorse1 = unit:HasAura(DK_CRUSADER_AURA_1)
+    local paleHorse2 = unit:HasAura(DK_CRUSADER_AURA_2)
 
     if hasCrusader or paleHorse2 then
-        self.currentSpeed = self.currentSpeed * 0.8
+        currentSpeed = currentSpeed * 0.8
         return
     elseif pursuitJustice2 then
-        self.currentSpeed = self.currentSpeed * 0.85
+        currentSpeed = currentSpeed * 0.85
         return
     elseif pursuitJustice1 then
-        self.currentSpeed = self.currentSpeed * 0.92
+        currentSpeed = currentSpeed * 0.92
     elseif paleHorse1 then
-        self.currentSpeed = self.currentSpeed * 0.9
+        currentSpeed = currentSpeed * 0.9
     end
+    return currentSpeed
 end
 
-function MountSpeedModifier:UpdateSpeed(eventId, delay, repeats, player)
+function UpdateSpeed(eventId, delay, repeats, player)
     if not player then return end
-    local guid = player:GetGUID()
-    self.playerSpeeds[guid] = player:GetSpeed(self.MOVE_RUN)
-    self:CheckAura(player)
 
     local playerMounted = player:IsMounted()
     local playerDead = player:IsDead()
 
-    self.currentSpeed = player:GetSpeed(self.MOVE_RUN)
-    self.CheckAura(player)
-    player:SendBroadcastMessage(string.format("DEBUG -- Your speed is currently: Ground: %d, Flying: %d ",
-        self.currentSpeed))
-    local ground1 = self.baseSpeed * 1.6
+    currentSpeed = player:GetSpeed(MOVE_RUN)
+    CheckAura(player)
+    player:SendBroadcastMessage("Debugging: Your speed is: ", currentSpeed)
+    local ground1 = baseSpeed * 1.6
     local newground1 = 2.2
 
-    local ground2 = self.baseSpeed * 2.0
+    local ground2 = baseSpeed * 2.0
     local newground2 = 2.5
 
-    local flying1 = self.baseSpeed * 2.5
+    local flying1 = baseSpeed * 2.5
     local newflying1 = 3.4
 
-    local flying2 = self.baseSpeed * 3.8
+    local flying2 = baseSpeed * 3.8
     local newflying2 = 4.5
 
-    local flying3 = self.baseSpeed * 4.1
-    local flyingRare = self.baseSpeed * 4.0 -- Some rare few mounts increase speed to 300% instead of 310%
+    local flying3 = baseSpeed * 4.1
+    local flyingRare = baseSpeed * 4.0 -- Some rare few mounts increase speed to 300% instead of 310%
     local newflying3 = 5
 
-    if self.currentSpeed == math.floor(ground1) and playerMounted then
-        player:SetSpeed(self.MOVE_RUN, newground1)
-    elseif self.currentSpeed == math.floor(ground2) and playerMounted then
-        player:SetSpeed(self.MOVE_RUN, newground2)
-    elseif self.currentSpeed == math.floor(flying1) then
-        player:SetSpeed(self.MOVE_FLY, newflying1)
-    elseif self.currentSpeed == math.floor(flying2) then
-        player:SetSpeed(self.MOVE_FLY, newflying2)
-    elseif self.currentSpeed == math.floor(flying3) or self.currentSpeed == math.floor(flyingRare) then
-        player:SetSpeed(self.MOVE_FLY, newflying3)
+    if currentSpeed == math.floor(ground1) and playerMounted then
+        player:SetSpeed(MOVE_RUN, newground1)
+    elseif currentSpeed == math.floor(ground2) and playerMounted then
+        player:SetSpeed(MOVE_RUN, newground2)
+    elseif currentSpeed == math.floor(flying1) then
+        player:SetSpeed(MOVE_FLY, newflying1)
+    elseif currentSpeed == math.floor(flying2) then
+        player:SetSpeed(MOVE_FLY, newflying2)
+    elseif currentSpeed == math.floor(flying3) or currentSpeed == math.floor(flyingRare) then
+        player:SetSpeed(MOVE_FLY, newflying3)
     end
 
-    if self.toggleFasterDead then
+    if toggleFasterDead then
         if playerDead then
-            player:SetSpeed(self.MOVE_RUN, newground1)
-            player:SetSpeed(self.MOVE_FLY, newflying1)
+            player:SetSpeed(MOVE_RUN, newground1)
+            player:SetSpeed(MOVE_FLY, newflying1)
         end
     end
 end
 
-function MountSpeedModifier:travelFormCheck(eventId, delay, repeats, player)
-    if not player or self.toggleShapeshiftSpeeds then return end
-    if self.toggleShapeshiftSpeeds then
-        local travelForm = player:HasAura(self.TRAVEL_FORM_SPELL_ID)
-        local ghostWolf = player:HasAura(self.GHOST_WOLF_SPELL_ID)
+function travelFormCheck(eventId, delay, repeats, player)
+    if not player or toggleShapeshiftSpeeds then return end
+    if toggleShapeshiftSpeeds then
+        local travelForm = player:HasAura(TRAVEL_FORM_SPELL_ID)
+        local ghostWolf = player:HasAura(GHOST_WOLF_SPELL_ID)
         if travelForm or ghostWolf then
-            player:SetSpeed(self.MOVE_RUN, 2) --increase or decrease 2nd value to change speed to your desire.
+            player:SetSpeed(MOVE_RUN, 2) --increase or decrease 2nd value to change speed to your desire.
         end
         -- automatically learn relevant travel form for druids and shamans
         local druidPlayer = player:HasSpell(5176) -- Wrath Spell
         local shamanPlayer = player:HasSpell(403) -- Lighting Bolt Spell
-        if druidPlayer and not player:HasSpell(self.TRAVEL_FORM_SPELL_ID) then
-            player:LearnSpell(self.TRAVEL_FORM_SPELL_ID)
+        if druidPlayer and not player:HasSpell(TRAVEL_FORM_SPELL_ID) then
+            player:LearnSpell(TRAVEL_FORM_SPELL_ID)
             player:SendNotification("You have automatically learned Travel Form!")
         end
-        if shamanPlayer and not player:HasSpell(self.GHOST_WOLF_SPELL_ID) then
-            player:LearnSpell(self.GHOST_WOLF_SPELL_ID)
+        if shamanPlayer and not player:HasSpell(GHOST_WOLF_SPELL_ID) then
+            player:LearnSpell(GHOST_WOLF_SPELL_ID)
             player:SendNotification("You have automatically learned Ghost Wolf!")
         end
     end
 end
 
-function MountSpeedModifier:OnLevelChange(event, player)
-    if self.toggleMountLevelTen then
+function OnLevelChange(event, player)
+    if toggleMountLevelTen then
         local race = player:GetRace()          -- See https://wowpedia.fandom.com/wiki/RaceId
         local levelTen = player:HasAchieved(6) --Achievement ID - Level 10
         if race == 1 and levelTen then
@@ -144,20 +135,18 @@ function MountSpeedModifier:OnLevelChange(event, player)
     end
 end
 
-function MountSpeedModifier:OnLogin(event, player)
-    player:SendBroadcastMessage(string.format("Test Message"))
-    if not player then return end
+function OnLogin(event, player)
     player:SendBroadcastMessage("Mount Speed Script loaded!")
-    player:RegisterEvent(self.UpdateSpeed, self.CHECK_INTERVAL, 0)
-    player:RegisterEvent(self.travelFormCheck, self.CHECK_INTERVAL, 0)
+    player:RegisterEvent(UpdateSpeed, CHECK_INTERVAL, 0)
+    player:RegisterEvent(travelFormCheck, CHECK_INTERVAL, 0)
 end
 
-function MountSpeedModifier:OnLogout(event, player)
+function OnLogout(event, player)
     if player then
         player:RemoveEvents()
     end
 end
 
-RegisterPlayerEvent(3, MountSpeedModifier:OnLogin(event, player))
-RegisterPlayerEvent(4, MountSpeedModifier:OnLogout(event, player))
-RegisterPlayerEvent(13, MountSpeedModifier:OnLevelChange(event, player, oldLevel))
+RegisterPlayerEvent(PLAYER_EVENT_ON_LOGIN, OnLogin)
+RegisterPlayerEvent(PLAYER_EVENT_ON_LOGOUT, OnLogout)
+RegisterPlayerEvent(PLAYER_EVENT_ON_LEVEL_CHANGE, OnLevelChange)
