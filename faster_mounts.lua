@@ -1,14 +1,13 @@
-local PLAYER_EVENT_ON_LOGIN = 3
-local PLAYER_EVENT_ON_LOGOUT = 4
-local PLAYER_EVENT_ON_LEVEL_CHANGE = 13
-
-
---Modifiable in world.conf 7.0 == 1.0 base speed. 7.7 is ABNORMAL and means world.conf setting is 1.1x player speed.
-baseSpeed = 7.7
+-- Script settings
+--Modifiable in worldserver.conf 7.0 == 1.0 base character movement speed.
+-- 7.7 is what I prefer and means that player speed is set to 1.1 in the worldserver.conf.
+baseSpeed = 7.0
 toggleShapeshiftSpeeds = true
 toggleMountLevelTen = true
 toggleFasterDead = true
-CHECK_INTERVAL = 2000
+
+--ENUM GLOBALS
+CHECK_INTERVAL = 2000 -- Miliseconds to recheck player speed
 MOVE_RUN = 1
 MOVE_FLY = 6
 TRAVEL_FORM_SPELL_ID = 783
@@ -18,8 +17,10 @@ PURSUIT_JUSTICE_1 = 26022  -- 8% increase mounted pally talent
 PURSUIT_JUSTICE_2 = 26023  -- 15%
 DK_CRUSADER_AURA_1 = 49146 -- 10% increased mounted dk talent
 DK_CRUSADER_AURA_2 = 51267 -- 20%
-
-function CheckAura(unit)
+PLAYER_EVENT_ON_LOGIN = 3
+PLAYER_EVENT_ON_LOGOUT = 4
+PLAYER_EVENT_ON_LEVEL_CHANGE = 13
+function CheckAura(unit) -- Will essentially tell lua to subtract the added speed of various auras to normalize and apply the "correct" speeds in the logic. Auras should still apply ingame.
     local hasCrusader = unit:HasAura(CRUSADER_AURA_ID)
     local pursuitJustice1 = unit:HasAura(PURSUIT_JUSTICE_1)
     local pursuitJustice2 = unit:HasAura(PURSUIT_JUSTICE_2)
@@ -28,10 +29,8 @@ function CheckAura(unit)
 
     if hasCrusader or paleHorse2 then
         currentSpeed = currentSpeed * 0.8
-        return
     elseif pursuitJustice2 then
         currentSpeed = currentSpeed * 0.85
-        return
     elseif pursuitJustice1 then
         currentSpeed = currentSpeed * 0.92
     elseif paleHorse1 then
@@ -42,68 +41,67 @@ end
 
 function UpdateSpeed(eventId, delay, repeats, player)
     if not player then return end
-
     local playerMounted = player:IsMounted()
     local playerDead = player:IsDead()
+    local isFlying = player:IsFlying()
 
     currentSpeed = player:GetSpeed(MOVE_RUN)
+
     CheckAura(player)
-    player:SendBroadcastMessage("Debugging: Your speed is: ", currentSpeed)
-    local ground1 = baseSpeed * 1.6
-    local newground1 = 2.2
 
-    local ground2 = baseSpeed * 2.0
-    local newground2 = 2.5
+    local SPEED_MAP = {
+        {old = baseSpeed * 1.6, new = 2.2, moveType = MOVE_RUN},  -- Ground Mount 1
+        {old = baseSpeed * 2.0, new = 2.5, moveType = MOVE_RUN},  -- Ground Mount 2
+        {old = baseSpeed * 2.2, new = 3.4, moveType = MOVE_FLY},  -- Flying Mount 1
+        {old = baseSpeed * 2.5, new = 4.3, moveType = MOVE_FLY},  -- Flying Mount 2
+        {old = baseSpeed * 4.1, new = 5.0, moveType = MOVE_FLY},  -- Flying Mount 3
+        {old = baseSpeed * 4.0, new = 5.0, moveType = MOVE_FLY},  -- Flying Mount oddball
+    }                                                               -- Some mounts have a 300% speed instead of 310%
 
-    local flying1 = baseSpeed * 2.5
-    local newflying1 = 3.4
 
-    local flying2 = baseSpeed * 3.8
-    local newflying2 = 4.5
+    local function ApplyMap(player, currentSpeed, map)
+        for _, entry in ipairs(map) do
+            print(currentSpeed)
+            print(string.format("%f - %f = %f", currentSpeed, entry.old, (currentSpeed - entry.old)))
+            secretFormuler = math.abs(currentSpeed - entry.old)
+            if secretFormuler < 0.5 then
+                player:SetSpeed(entry.moveType, entry.new, true)
+                return true
+            end
+        end
+        return false
+    end
 
-    local flying3 = baseSpeed * 4.1
-    local flyingRare = baseSpeed * 4.0 -- Some rare few mounts increase speed to 300% instead of 310%
-    local newflying3 = 5
-
-    if currentSpeed == math.floor(ground1) and playerMounted then
-        player:SetSpeed(MOVE_RUN, newground1)
-    elseif currentSpeed == math.floor(ground2) and playerMounted then
-        player:SetSpeed(MOVE_RUN, newground2)
-    elseif currentSpeed == math.floor(flying1) then
-        player:SetSpeed(MOVE_FLY, newflying1)
-    elseif currentSpeed == math.floor(flying2) then
-        player:SetSpeed(MOVE_FLY, newflying2)
-    elseif currentSpeed == math.floor(flying3) or currentSpeed == math.floor(flyingRare) then
-        player:SetSpeed(MOVE_FLY, newflying3)
+    if playerMounted or isFlying then
+        ApplyMap(player, currentSpeed, SPEED_MAP)
     end
 
     if toggleFasterDead then
         if playerDead then
-            player:SetSpeed(MOVE_RUN, newground1)
-            player:SetSpeed(MOVE_FLY, newflying1)
+            player:SetSpeed(MOVE_RUN, 2.2, true) -- Hard values here represent 2.2x speed and 3.4x speed
+            player:SetSpeed(MOVE_FLY, 3.4, true)
         end
     end
 end
 
 function travelFormCheck(eventId, delay, repeats, player)
-    if not player or toggleShapeshiftSpeeds then return end
-    if toggleShapeshiftSpeeds then
-        local travelForm = player:HasAura(TRAVEL_FORM_SPELL_ID)
-        local ghostWolf = player:HasAura(GHOST_WOLF_SPELL_ID)
-        if travelForm or ghostWolf then
-            player:SetSpeed(MOVE_RUN, 2) --increase or decrease 2nd value to change speed to your desire.
-        end
+    if not player or not toggleShapeshiftSpeeds then return end
+
+    local travelForm = player:HasAura(TRAVEL_FORM_SPELL_ID)
+    local ghostWolf = player:HasAura(GHOST_WOLF_SPELL_ID)
+    if travelForm or ghostWolf then
+        player:SetSpeed(MOVE_RUN, 2, true) --increase or decrease 2nd value to change speed to your desire.
+    end
         -- automatically learn relevant travel form for druids and shamans
-        local druidPlayer = player:HasSpell(5176) -- Wrath Spell
-        local shamanPlayer = player:HasSpell(403) -- Lighting Bolt Spell
-        if druidPlayer and not player:HasSpell(TRAVEL_FORM_SPELL_ID) then
-            player:LearnSpell(TRAVEL_FORM_SPELL_ID)
-            player:SendNotification("You have automatically learned Travel Form!")
-        end
-        if shamanPlayer and not player:HasSpell(GHOST_WOLF_SPELL_ID) then
-            player:LearnSpell(GHOST_WOLF_SPELL_ID)
-            player:SendNotification("You have automatically learned Ghost Wolf!")
-        end
+    local druidPlayer = player:HasSpell(5176) -- Wrath Spell
+    local shamanPlayer = player:HasSpell(403) -- Lighting Bolt Spell
+    if druidPlayer and not player:HasSpell(TRAVEL_FORM_SPELL_ID) then
+        player:LearnSpell(TRAVEL_FORM_SPELL_ID)
+        player:SendNotification("You have automatically learned Travel Form!")
+    end
+    if shamanPlayer and not player:HasSpell(GHOST_WOLF_SPELL_ID) then
+        player:LearnSpell(GHOST_WOLF_SPELL_ID)
+        player:SendNotification("You have automatically learned Ghost Wolf!")
     end
 end
 
@@ -136,9 +134,11 @@ function OnLevelChange(event, player)
 end
 
 function OnLogin(event, player)
-    player:SendBroadcastMessage("Mount Speed Script loaded!")
-    player:RegisterEvent(UpdateSpeed, CHECK_INTERVAL, 0)
-    player:RegisterEvent(travelFormCheck, CHECK_INTERVAL, 0)
+    if player then
+        player:SendBroadcastMessage("Mount Speed Script loaded!")
+        player:RegisterEvent(UpdateSpeed, CHECK_INTERVAL, 0)
+        player:RegisterEvent(travelFormCheck, CHECK_INTERVAL, 0)
+    end
 end
 
 function OnLogout(event, player)
@@ -150,3 +150,11 @@ end
 RegisterPlayerEvent(PLAYER_EVENT_ON_LOGIN, OnLogin)
 RegisterPlayerEvent(PLAYER_EVENT_ON_LOGOUT, OnLogout)
 RegisterPlayerEvent(PLAYER_EVENT_ON_LEVEL_CHANGE, OnLevelChange)
+
+if baseSpeed == 7 then
+    print("faster_mounts.lua is on and assuming a character speed value of x1.0.")
+elseif baseSpeed == 7.7 then
+    print("faster_mounts.lua is on and assuming a character speed value of x1.1.")
+else
+    print("Please modify the variable named baseSpeed at the top of the faster_mounts.lua file to align with your server's default character speed, which is defined in worldserver.conf.\n7.0 is for a character speed of 1x and 7.7 is for a character speed of 1.1x")
+end

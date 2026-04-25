@@ -1,5 +1,6 @@
 -- Update this variable GuildName to be the name of your starter guild. This is case sensitive!
-GuildName = "Fishy"
+-- The guild must exist in order for this plugin to work
+GuildName = "FaeHaven"
 Rank = 0
 
 local function ON_FIRST_LOGIN(event, player)
