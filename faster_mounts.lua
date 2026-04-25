@@ -1,7 +1,7 @@
 -- Script settings
 --Modifiable in worldserver.conf 7.0 == 1.0 base character movement speed.
 -- 7.7 is what I prefer and means that player speed is set to 1.1 in the worldserver.conf.
-baseSpeed = 7.0
+baseSpeed = 7.7
 toggleShapeshiftSpeeds = true
 toggleMountLevelTen = true
 toggleFasterDead = true
@@ -61,8 +61,8 @@ function UpdateSpeed(eventId, delay, repeats, player)
 
     local function ApplyMap(player, currentSpeed, map)
         for _, entry in ipairs(map) do
-            print(currentSpeed)
-            print(string.format("%f - %f = %f", currentSpeed, entry.old, (currentSpeed - entry.old)))
+            --print(currentSpeed)
+            --print(string.format("%f - %f = %f", currentSpeed, entry.old, (currentSpeed - entry.old)))
             secretFormuler = math.abs(currentSpeed - entry.old)
             if secretFormuler < 0.5 then
                 player:SetSpeed(entry.moveType, entry.new, true)
