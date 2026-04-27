@@ -1,7 +1,7 @@
 -- Script settings
 --Modifiable in worldserver.conf 7.0 == 1.0 base character movement speed.
 -- 7.7 is what I prefer and means that player speed is set to 1.1 in the worldserver.conf.
-baseSpeed = 7.7
+baseSpeed = 7.0
 toggleShapeshiftSpeeds = true
 toggleMountLevelTen = true
 toggleFasterDead = true
@@ -20,6 +20,7 @@ DK_CRUSADER_AURA_2 = 51267 -- 20%
 PLAYER_EVENT_ON_LOGIN = 3
 PLAYER_EVENT_ON_LOGOUT = 4
 PLAYER_EVENT_ON_LEVEL_CHANGE = 13
+
 function CheckAura(unit) -- Will essentially tell lua to subtract the added speed of various auras to normalize and apply the "correct" speeds in the logic. Auras should still apply ingame.
     local hasCrusader = unit:HasAura(CRUSADER_AURA_ID)
     local pursuitJustice1 = unit:HasAura(PURSUIT_JUSTICE_1)
@@ -53,34 +54,23 @@ function UpdateSpeed(eventId, delay, repeats, player)
         {old = baseSpeed * 1.6, new = 2.2, moveType = MOVE_RUN},  -- Ground Mount 1
         {old = baseSpeed * 2.0, new = 2.5, moveType = MOVE_RUN},  -- Ground Mount 2
         {old = baseSpeed * 2.2, new = 3.4, moveType = MOVE_FLY},  -- Flying Mount 1
-        {old = baseSpeed * 2.5, new = 4.3, moveType = MOVE_FLY},  -- Flying Mount 2
+        {old = baseSpeed * 2.5, new = 4.2, moveType = MOVE_FLY},  -- Flying Mount 2
         {old = baseSpeed * 4.1, new = 5.0, moveType = MOVE_FLY},  -- Flying Mount 3
         {old = baseSpeed * 4.0, new = 5.0, moveType = MOVE_FLY},  -- Flying Mount oddball
     }                                                               -- Some mounts have a 300% speed instead of 310%
 
-
-    local function ApplyMap(player, currentSpeed, map)
-        for _, entry in ipairs(map) do
-            --print(currentSpeed)
-            --print(string.format("%f - %f = %f", currentSpeed, entry.old, (currentSpeed - entry.old)))
+    if playerMounted or isFlying then
+        for _, entry in ipairs(SPEED_MAP) do
             secretFormuler = math.abs(currentSpeed - entry.old)
-            if secretFormuler < 0.5 then
+            if secretFormuler < 0.3 then
                 player:SetSpeed(entry.moveType, entry.new, true)
-                return true
             end
         end
-        return false
     end
 
-    if playerMounted or isFlying then
-        ApplyMap(player, currentSpeed, SPEED_MAP)
-    end
-
-    if toggleFasterDead then
-        if playerDead then
-            player:SetSpeed(MOVE_RUN, 2.2, true) -- Hard values here represent 2.2x speed and 3.4x speed
-            player:SetSpeed(MOVE_FLY, 3.4, true)
-        end
+    if toggleFasterDead and playerDead then
+        player:SetSpeed(MOVE_RUN, 2.2, true) -- Hard values here represent 2.2x speed and 3.4x speed
+        player:SetSpeed(MOVE_FLY, 3.4, true)
     end
 end
 
@@ -106,29 +96,26 @@ function travelFormCheck(eventId, delay, repeats, player)
 end
 
 function OnLevelChange(event, player)
-    if toggleMountLevelTen then
-        local race = player:GetRace()          -- See https://wowpedia.fandom.com/wiki/RaceId
-        local levelTen = player:HasAchieved(6) --Achievement ID - Level 10
-        if race == 1 and levelTen then
-            player:LearnSpell(6648)            --Chestnut Mare
-        elseif race == 2 and levelTen then
-            player:LearnSpell(6654)            --Brown Wolf
-        elseif race == 3 and levelTen then
-            player:LearnSpell(6899)            --Brown Ram
-        elseif race == 4 and levelTen then
-            player:LearnSpell(8394)            --Striped Frostsaber
-        elseif race == 5 and levelTen then
-            player:LearnSpell(17464)           --Brown Skeletal Horse
-        elseif race == 6 and levelTen then
-            player:LearnSpell(18990)           --Brown Kodo
-        elseif race == 7 and levelTen then
-            player:LearnSpell(17453)           --Green Mechanostrider
-        elseif race == 8 and levelTen then
-            player:LearnSpell(10799)           --Violet Raptor
-        elseif race == 10 and levelTen then
-            player:LearnSpell(35018)           --Purple Hawkstrider
-        elseif race == 11 and levelTen then
-            player:LearnSpell(34406)           --Brown Elkk
+
+    local MOUNT_MAP = {
+        {race = 1, name = "Human", mount = 6648, mname = "Chestnut Mare"},
+        {race = 2, name = "Orc", mount = 6654, mname = "Brown Wolf"},
+        {race = 3, name = "Dwarf", mount = 6899, mname = "Brown Ram"},
+        {race = 4, name = "Night Elf", mount = 8394, mname = "Striped Frostsaber"},
+        {race = 5, name = "Undead", mount = 17464, mname = "Brown Skeletal Horse"},
+        {race = 6, name = "Tauren", mount = 18990, mname = "Brown Kodo"},
+        {race = 7, name = "Gnome", mount = 17453, mname = "Green Mechanostrider"},
+        {race = 8, name = "Troll", mount = 17453, mname = "Violet Raptor"},
+        {race = 10, name = "Blood Elf", mount = 10799, mname = "Purple Hawkstrider"},
+        {race = 11, name = "Draenei", mount = 35018, mname = "Brown Elkk"},
+    }
+    local achievement_Level_Ten = 6
+    if toggleMountLevelTen and player:HasAchieved(achievement_Level_Ten) then
+        local race = player:GetRace()
+        for _, entry in ipairs(MOUNT_MAP) do
+            if entry.race == race then
+                player:LearnSpell(entry.mount)
+            end
         end
     end
 end
