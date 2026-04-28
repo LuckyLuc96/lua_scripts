@@ -73,10 +73,12 @@ function UpdateSpeed(eventId, delay, repeats, player)
         flyingMap =  player:GetMapId()
         player:SetSpeed(MOVE_RUN, 2.2, true) -- Hard values here represent 2.2x speed and 3.4x speed
         player:SetSpeed(MOVE_FLY, 3.4, true)
-        print(flyingMap)
         if flyingMap == 530 or flyingMap == 571 and not player:HasAura(GHOST_GRYPHON) then -- Outlands or Northrend open world
             player:AddAura(GHOST_GRYPHON, player)
         end
+    end
+    if not playerDead then
+        player:RemoveAura(GHOST_GRYPHON)
     end
 end
 
