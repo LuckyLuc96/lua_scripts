@@ -20,6 +20,7 @@ DK_CRUSADER_AURA_2 = 51267 -- 20%
 PLAYER_EVENT_ON_LOGIN = 3
 PLAYER_EVENT_ON_LOGOUT = 4
 PLAYER_EVENT_ON_LEVEL_CHANGE = 13
+GHOST_GRYPHON = 55164
 
 function CheckAura(unit) -- Will essentially tell lua to subtract the added speed of various auras to normalize and apply the "correct" speeds in the logic. Auras should still apply ingame.
     local hasCrusader = unit:HasAura(CRUSADER_AURA_ID)
@@ -69,8 +70,13 @@ function UpdateSpeed(eventId, delay, repeats, player)
     end
 
     if toggleFasterDead and playerDead then
+        flyingMap =  player:GetMapId()
         player:SetSpeed(MOVE_RUN, 2.2, true) -- Hard values here represent 2.2x speed and 3.4x speed
         player:SetSpeed(MOVE_FLY, 3.4, true)
+        print(flyingMap)
+        if flyingMap == 530 or flyingMap == 571 and not player:HasAura(GHOST_GRYPHON) then -- Outlands or Northrend open world
+            player:AddAura(GHOST_GRYPHON, player)
+        end
     end
 end
 
