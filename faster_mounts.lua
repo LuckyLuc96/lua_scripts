@@ -5,6 +5,8 @@ baseSpeed = 7.0
 toggleShapeshiftSpeeds = true
 toggleMountLevelTen = true
 toggleFasterDead = true
+toggleExperimentalGhostGryphon = true
+-- The ghost gryphon works. But it comes with character animation issues post resurrection and some dismounting while flying (while switching to different sub-zones)
 
 --ENUM GLOBALS
 CHECK_INTERVAL = 2000 -- Miliseconds to recheck player speed
@@ -70,14 +72,15 @@ function UpdateSpeed(eventId, delay, repeats, player)
     end
 
     if toggleFasterDead and playerDead then
-        flyingMap =  player:GetMapId()
-        player:SetSpeed(MOVE_RUN, 2.2, true) -- Hard values here represent 2.2x speed and 3.4x speed
-        player:SetSpeed(MOVE_FLY, 3.4, true)
-        if flyingMap == 530 or flyingMap == 571 and not player:HasAura(GHOST_GRYPHON) then -- Outlands or Northrend open world
+        flyingMap = player:GetMapId()
+        if toggleExperimentalGhostGryphon and flyingMap == 530 or flyingMap == 571 and not player:HasAura(GHOST_GRYPHON) then -- Outlands or Northrend open world
             player:AddAura(GHOST_GRYPHON, player)
+        else
+            player:SetSpeed(MOVE_RUN, 2.2, true) -- Hard values here represent 2.2x speed and 3.4x speed
+            player:SetSpeed(MOVE_FLY, 3.4, true)
         end
     end
-    if not playerDead then
+    if not playerDead and toggleExperimentalGhostGryphon then
         player:RemoveAura(GHOST_GRYPHON)
     end
 end
